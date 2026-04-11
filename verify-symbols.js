@@ -42,6 +42,35 @@ for (let i = 0; i < args.length; i++) {
   if (args[i] === '--project') projectRoot = path.resolve(args[++i]);
 }
 
+// ── Ignore config ──────────────────────────────────────────────────────
+// Reads optional config from package.json:
+//
+//   "verify-symbols": {
+//     "ignoreNavScreens":       ["ScreenName"],
+//     "ignoreStoreDestructures": ["useFoo:bar", "useFoo:baz"],
+//     "ignoreApiCalls":          ["POST /foo", "GET /bar/:param"]
+//   }
+//
+// Each ignore is an exact string match against what the verifier would report.
+// Add an ignore only when it's a KNOWN pending issue (and linked to a tracked
+// task) or a verified false positive. Every ignore should have a comment or
+// task number next to it in package.json explaining why.
+
+let ignoreConfig = { ignoreNavScreens: [], ignoreStoreDestructures: [], ignoreApiCalls: [] };
+try {
+  const pkgPath = path.join(projectRoot, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    if (pkg['verify-symbols']) {
+      ignoreConfig = {
+        ignoreNavScreens: pkg['verify-symbols'].ignoreNavScreens || [],
+        ignoreStoreDestructures: pkg['verify-symbols'].ignoreStoreDestructures || [],
+        ignoreApiCalls: pkg['verify-symbols'].ignoreApiCalls || [],
+      };
+    }
+  }
+} catch { /* ignore parse errors */ }
+
 // ── helpers ────────────────────────────────────────────────────────────
 const IGNORE_DIRS = new Set([
   'node_modules', '.git', 'android', 'ios', '.expo', 'build', 'dist',
@@ -118,6 +147,7 @@ function checkNavigationCalls(files, knownScreens) {
     while ((m = navRe.exec(content)) !== null) {
       const target = m[1];
       if (!knownScreens.has(target)) {
+        if (ignoreConfig.ignoreNavScreens.includes(target)) continue;
         record(file, lineOf(content, m.index),
           `navigation.navigate('${target}') — '${target}' is not a registered screen. ` +
           `Known screens: ${[...knownScreens].sort().join(', ')}`);
@@ -296,6 +326,7 @@ function checkStoreDestructures(files, stores) {
 
         for (const name of names) {
           if (!knownKeys.has(name)) {
+            if (ignoreConfig.ignoreStoreDestructures.includes(`${hookName}:${name}`)) continue;
             record(file, lineOf(content, m.index),
               `Destructured '${name}' from ${hookName}() but the store doesn't export it. ` +
               `Available: ${[...knownKeys].sort().join(', ')}`);
@@ -411,6 +442,8 @@ function checkApiCalls(files, routes) {
           return apiStructure === clientStructure || apiStructure === '/api/v1' + clientStructure;
         });
         if (!structuralMatch) {
+          const ignoreKey = `${method} ${routePath}`;
+          if (ignoreConfig.ignoreApiCalls.includes(ignoreKey)) continue;
           record(file, lineOf(content, m.index),
             `api.${m[1]}('${pathRaw}') — no matching route in the API. Expected ${method} ${routePath} or similar.`);
         }

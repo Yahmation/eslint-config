@@ -180,7 +180,19 @@ function discoverStores(files) {
       const start = m.index + m[0].length;
       const keys = extractTopLevelKeysFromStoreBody(content, start);
       if (keys) {
-        stores.set(hookName, keys);
+        // If the same hook name is defined in multiple files (e.g. separate
+        // web and mobile copies of useCallStore inside a monorepo), MERGE the
+        // keys from both. Otherwise the second definition would silently
+        // overwrite the first, causing destructure checks in files near the
+        // overwritten definition to false-positive against the wrong store.
+        // The tradeoff: a key that exists only in mobile and is used only on
+        // web would pass. For this codebase that tradeoff is fine.
+        const existing = stores.get(hookName);
+        if (existing) {
+          for (const k of keys) existing.add(k);
+        } else {
+          stores.set(hookName, keys);
+        }
       }
     }
   }

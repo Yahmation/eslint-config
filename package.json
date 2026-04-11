@@ -1,14 +1,18 @@
 {
   "name": "@yahmation/eslint-config",
-  "version": "1.0.0",
-  "description": "Shared ESLint flat config for all Yahmation projects (web + mobile + API). Catches the class of bugs where code references functions/variables that don't exist at write time.",
+  "version": "1.1.0",
+  "description": "Shared ESLint flat config + cross-reference verifier for all Yahmation projects (web + mobile + API). Catches the class of bugs where code references functions/variables that don't exist at write time.",
   "type": "module",
   "main": "base.config.mjs",
   "exports": {
     ".": "./base.config.mjs"
   },
+  "bin": {
+    "verify-symbols": "./verify-symbols.js"
+  },
   "files": [
     "base.config.mjs",
+    "verify-symbols.js",
     "README.md"
   ],
   "keywords": [

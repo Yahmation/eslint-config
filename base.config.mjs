@@ -25,6 +25,7 @@
 import js from '@eslint/js';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import a11yPlugin from 'eslint-plugin-jsx-a11y';
 import globals from 'globals';
 
 export default [
@@ -128,6 +129,37 @@ export default [
     files: ['**/*.config.{js,mjs,cjs}', '**/vite.config.*', '**/metro.config.*'],
     rules: {
       'no-unused-vars': 'off',
+    },
+  },
+
+  // ── Web JSX/TSX a11y rules ──────────────────────────────────────
+  // Scoped to apps/web (not mobile) — jsx-a11y assumes browser DOM
+  // semantics. React Native components have their own accessibility
+  // story (accessibilityRole/accessibilityLabel) that this plugin
+  // doesn't understand. Keep at warn-level so existing untagged
+  // <button>/<img> sites don't break the build but new code gets
+  // nudged toward a11y compliance.
+  {
+    files: ['**/apps/web/src/**/*.{js,jsx,ts,tsx}'],
+    plugins: { 'jsx-a11y': a11yPlugin },
+    rules: {
+      ...a11yPlugin.configs.recommended.rules,
+      // Common false-positives in our codebase — too noisy to be useful:
+      // - Many click handlers are deliberate (custom-styled non-interactive
+      //   elements that get keyboard handling separately via testIDs)
+      'jsx-a11y/click-events-have-key-events': 'off',
+      'jsx-a11y/no-static-element-interactions': 'off',
+      // We use modal dialogs that aren't <dialog> — handled with focus traps
+      'jsx-a11y/no-autofocus': 'off',
+      // Keep the most-impactful rules at warn so they show up:
+      'jsx-a11y/alt-text': 'warn',
+      'jsx-a11y/anchor-has-content': 'warn',
+      'jsx-a11y/anchor-is-valid': 'warn',
+      'jsx-a11y/aria-props': 'warn',
+      'jsx-a11y/aria-role': 'warn',
+      'jsx-a11y/img-redundant-alt': 'warn',
+      'jsx-a11y/label-has-associated-control': 'warn',
+      'jsx-a11y/role-has-required-aria-props': 'warn',
     },
   },
 

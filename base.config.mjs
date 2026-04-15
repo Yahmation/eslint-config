@@ -130,4 +130,19 @@ export default [
       'no-unused-vars': 'off',
     },
   },
+
+  // ── Backend services: prefer structured logging over console.* ──
+  // Backend code should use Fastify's pino logger (req.log.info / fastify.log.warn)
+  // or a module-level pino instance — emits structured JSON that integrates with
+  // log aggregators. console.* writes plain strings and can't be filtered by level
+  // or queried by field. Warn (don't error) so existing code keeps building.
+  // Allowlist: cron entry points + diagnostic scripts where stdout IS the log.
+  // Glob matches both fully-qualified paths (linting from repo root) and
+  // path-relative invocations (eslint services/api/src).
+  {
+    files: ['**/services/api/src/lib/**/*.{js,mjs,ts}', '**/services/api/src/routes/**/*.{js,mjs,ts}', '**/services/api/src/ws/**/*.{js,mjs,ts}'],
+    rules: {
+      'no-console': ['warn', { allow: [] }],
+    },
+  },
 ];

@@ -149,8 +149,13 @@ export default [
       //   elements that get keyboard handling separately via testIDs)
       'jsx-a11y/click-events-have-key-events': 'off',
       'jsx-a11y/no-static-element-interactions': 'off',
+      'jsx-a11y/no-noninteractive-element-interactions': 'off',
       // We use modal dialogs that aren't <dialog> — handled with focus traps
       'jsx-a11y/no-autofocus': 'off',
+      // Voicemail playback uses <audio> elements without captions —
+      // captions on user-recorded voicemails are not meaningful (we
+      // surface the transcript inline in the UI for that purpose).
+      'jsx-a11y/media-has-caption': 'off',
       // Keep the most-impactful rules at warn so they show up:
       'jsx-a11y/alt-text': 'warn',
       'jsx-a11y/anchor-has-content': 'warn',

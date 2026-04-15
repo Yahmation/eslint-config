@@ -142,7 +142,7 @@ export default [
   {
     files: ['**/services/api/src/lib/**/*.{js,mjs,ts}', '**/services/api/src/routes/**/*.{js,mjs,ts}', '**/services/api/src/ws/**/*.{js,mjs,ts}'],
     rules: {
-      'no-console': ['warn', { allow: [] }],
+      'no-console': 'warn',
     },
   },
 ];
